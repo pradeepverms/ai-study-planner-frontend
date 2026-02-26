@@ -8,90 +8,93 @@
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #fff;
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
+      background: radial-gradient(circle at top, #0f766e, #020617);
+      font-family: Arial, sans-serif;
+      color: #e5e7eb;
     }
 
     .card {
-      background: #111;
-      padding: 30px;
-      border-radius: 10px;
+      background: #020617;
+      padding: 28px;
       width: 420px;
-      box-shadow: 0 0 25px rgba(0,0,0,0.6);
+      border-radius: 14px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.6);
     }
 
     h1 {
       text-align: center;
-      margin-bottom: 20px;
-      color: #4ef0d4;
+      color: #5eead4;
+      margin-bottom: 22px;
     }
 
     label {
-      display: block;
-      margin-top: 15px;
       font-size: 14px;
+      margin-top: 14px;
+      display: block;
     }
 
     input, select {
       width: 100%;
       padding: 10px;
-      margin-top: 5px;
-      border-radius: 5px;
-      border: none;
-      outline: none;
+      margin-top: 6px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 14px;
     }
 
     button {
-      margin-top: 25px;
+      margin-top: 22px;
       width: 100%;
       padding: 12px;
-      background: #4ef0d4;
       border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #5eead4, #22d3ee);
+      color: #020617;
       font-weight: bold;
+      cursor: pointer;
+      font-size: 15px;
     }
 
     button:hover {
-      background: #3bd1b8;
+      opacity: 0.9;
     }
 
     pre {
-      margin-top: 20px;
-      background: #000;
-      padding: 15px;
-      border-radius: 5px;
-      max-height: 300px;
-      overflow: auto;
-      font-size: 12px;
+      margin-top: 18px;
+      background: #020617;
+      border: 1px solid #334155;
+      padding: 12px;
+      border-radius: 10px;
+      max-height: 260px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-size: 13px;
     }
 
     .error {
-      color: #ff6b6b;
-      margin-top: 15px;
-      white-space: pre-wrap;
+      color: #f87171;
     }
   </style>
 </head>
-<body>
 
+<body>
   <div class="card">
     <h1>AI Study Planner</h1>
 
-    <label>Exam Name</label>
+    <label>Exam</label>
     <input id="exam" value="GATE DA" />
 
     <label>Exam Date</label>
-    <input id="exam_date" type="date" value="2028-03-05" />
+    <input id="examDate" type="date" />
 
     <label>Daily Study Hours</label>
-    <input id="daily_hours" type="number" value="5" />
+    <input id="dailyHours" type="number" value="5" />
 
     <label>Level</label>
     <select id="level">
@@ -100,48 +103,51 @@
       <option value="advanced">Advanced</option>
     </select>
 
+    <label>Topics (comma separated)</label>
+    <input id="topics" placeholder="Maths, Programming, ML" />
+
     <button onclick="generatePlan()">Generate Study Plan</button>
 
-    <div id="error" class="error"></div>
-    <pre id="result"></pre>
+    <pre id="output"></pre>
   </div>
 
   <script>
+    const API_URL = "https://ai-study-planner-backend-2.onrender.com/api/v1/generate-plan";
+
     async function generatePlan() {
+      const output = document.getElementById("output");
+      output.textContent = "Generating plan...";
+
       const payload = {
         exam: document.getElementById("exam").value,
-        exam_date: document.getElementById("exam_date").value,
-        daily_hours: Number(document.getElementById("daily_hours").value),
+        exam_date: document.getElementById("examDate").value,
+        daily_hours: Number(document.getElementById("dailyHours").value),
         level: document.getElementById("level").value,
-        topics: []
+        topics: document.getElementById("topics").value
+          .split(",")
+          .map(t => t.trim())
+          .filter(Boolean)
       };
 
-      document.getElementById("error").innerText = "";
-      document.getElementById("result").innerText = "";
-
       try {
-        const res = await fetch(
-          "https://ai-study-planner-backend-2.onrender.com/generate-plan/",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          }
-        );
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
 
         const data = await res.json();
 
-        if (!res.ok) throw data;
+        if (!res.ok) {
+          output.innerHTML = '<span class="error">' + JSON.stringify(data, null, 2) + '</span>';
+          return;
+        }
 
-        document.getElementById("result").innerText =
-          JSON.stringify(data, null, 2);
-
+        output.textContent = JSON.stringify(data, null, 2);
       } catch (err) {
-        document.getElementById("error").innerText =
-          "Backend Error:\n" + JSON.stringify(err, null, 2);
+        output.innerHTML = '<span class="error">' + err.message + '</span>';
       }
     }
   </script>
-
 </body>
 </html>
