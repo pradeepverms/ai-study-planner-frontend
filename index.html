@@ -7,132 +7,152 @@
 
   <style>
     body {
-      font-family: Arial, sans-serif;
       background: #0f172a;
+      font-family: Arial, Helvetica, sans-serif;
       color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
       margin: 0;
-      padding: 0;
     }
 
     .container {
-      max-width: 800px;
-      margin: 40px auto;
+      width: 100%;
+      max-width: 500px;
       background: #020617;
       padding: 30px;
       border-radius: 10px;
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.15);
     }
 
     h1 {
       text-align: center;
-      color: #38bdf8;
+      color: #22d3ee;
+      margin-bottom: 25px;
     }
 
     label {
       display: block;
-      margin-top: 15px;
-      font-weight: bold;
+      margin-bottom: 6px;
+      font-size: 14px;
+      color: #cbd5f5;
     }
 
     input, select, button {
       width: 100%;
       padding: 10px;
-      margin-top: 5px;
-      border-radius: 5px;
+      margin-bottom: 18px;
+      border-radius: 6px;
       border: none;
-      font-size: 16px;
+      font-size: 14px;
+    }
+
+    input, select {
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid #334155;
     }
 
     button {
-      background: #38bdf8;
+      background: #22d3ee;
       color: #020617;
-      cursor: pointer;
-      margin-top: 20px;
       font-weight: bold;
+      cursor: pointer;
     }
 
     button:hover {
-      background: #0ea5e9;
+      background: #06b6d4;
     }
 
     pre {
       background: #020617;
-      border: 1px solid #334155;
       padding: 15px;
-      border-radius: 8px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      overflow-x: auto;
+      font-size: 13px;
       white-space: pre-wrap;
-      margin-top: 20px;
     }
 
     .error {
       color: #f87171;
-      margin-top: 15px;
-      text-align: center;
+      font-weight: bold;
     }
   </style>
 </head>
 
 <body>
+
   <div class="container">
     <h1>AI Study Planner</h1>
 
     <label>Exam Name</label>
-    <input id="exam" placeholder="GATE DA" />
+    <input id="examName" placeholder="GATE DA" />
 
     <label>Exam Date</label>
-    <input id="exam_date" type="date" />
+    <input id="examDate" type="date" />
 
     <label>Daily Study Hours</label>
     <input id="hours" type="number" value="5" />
 
     <label>Level</label>
     <select id="level">
-      <option value="beginner">Beginner</option>
-      <option value="intermediate">Intermediate</option>
-      <option value="advanced">Advanced</option>
+      <option>Beginner</option>
+      <option>Intermediate</option>
+      <option>Advanced</option>
     </select>
 
     <button onclick="generatePlan()">Generate Study Plan</button>
 
-    <div id="error" class="error"></div>
-    <pre id="result"></pre>
+    <div id="output"></div>
   </div>
 
   <script>
-    const API_BASE = "https://ai-study-planner-backend-2.onrender.com";
+    // 🔥 BACKEND URL (already correct)
+    const BACKEND_BASE_URL = "https://ai-study-planner-backend-2.onrender.com";
 
     async function generatePlan() {
-      document.getElementById("error").innerText = "";
-      document.getElementById("result").innerText = "Generating plan...";
+      const output = document.getElementById("output");
+      output.innerHTML = "Generating plan...";
 
       const data = {
-        exam: document.getElementById("exam").value,
-        exam_date: document.getElementById("exam_date").value,
+        exam_name: document.getElementById("examName").value,
+        exam_date: document.getElementById("examDate").value,
         daily_hours: Number(document.getElementById("hours").value),
         level: document.getElementById("level").value
       };
 
       try {
-        const response = await fetch(`${API_BASE}/api/v1/generate-plan`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        });
+        const response = await fetch(
+          `${BACKEND_BASE_URL}/api/v1/generate-plan`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Backend error: " + response.status);
         }
 
         const result = await response.json();
-        document.getElementById("result").innerText =
-          JSON.stringify(result, null, 2);
+
+        output.innerHTML =
+          "<h3>Generated Plan</h3><pre>" +
+          JSON.stringify(result, null, 2) +
+          "</pre>";
 
       } catch (err) {
-        document.getElementById("result").innerText = "";
-        document.getElementById("error").innerText =
-          "❌ Cannot reach backend. Check API URL or CORS.";
+        output.innerHTML =
+          "<p class='error'>Error: " + err.message + "</p>";
         console.error(err);
       }
     }
   </script>
+
 </body>
 </html>
